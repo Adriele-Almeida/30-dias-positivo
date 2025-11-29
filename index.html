@@ -1,0 +1,247 @@
+import React, { useState, useEffect } from 'react';
+import { Lock, Check, Sun, Moon, RefreshCw, Heart, Zap, Shield, Smile, Award, Sparkles } from 'lucide-react';
+
+const AffirmationApp = () => {
+  const [startDate, setStartDate] = useState(null);
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [animate, setAnimate] = useState(false);
+
+  // Lista de afirmações focadas em positividade e "zero reclamações"
+  const affirmations = [
+    { day: 1, text: "Hoje, eu escolho agradecer pelo que tenho em vez de reclamar do que me falta.", theme: "Gratidão Inicial" },
+    { day: 2, text: "Eu tenho o poder de controlar minha reação a qualquer situação.", theme: "Autocontrole" },
+    { day: 3, text: "Cada desafio é uma oportunidade disfarçada de aprendizado.", theme: "Perspectiva" },
+    { day: 4, text: "Eu liberto a necessidade de criticar os outros e a mim mesmo.", theme: "Aceitação" },
+    { day: 5, text: "Minhas palavras constroem minha realidade. Hoje, escolho palavras de cura.", theme: "Poder da Fala" },
+    { day: 6, text: "Respiro fundo e solto qualquer tensão. Estou em paz neste momento.", theme: "Calma" },
+    { day: 7, text: "Eu sou capaz de encontrar soluções criativas para qualquer obstáculo.", theme: "Capacidade" },
+    { day: 8, text: "Hoje, foco apenas no que posso controlar e aceito o que não posso.", theme: "Estoicismo" },
+    { day: 9, text: "A reclamação drena minha energia; a gratidão a recarrega.", theme: "Energia" },
+    { day: 10, text: "Eu sou um ímã para boas notícias e acontecimentos positivos.", theme: "Atração" },
+    { day: 11, text: "Perdoo o passado e me abro para um novo começo agora.", theme: "Perdão" },
+    { day: 12, text: "Minha felicidade não depende de circunstâncias externas.", theme: "Autonomia" },
+    { day: 13, text: "Substituo o 'eu tenho que' pelo 'eu escolho', retomando meu poder.", theme: "Escolha" },
+    { day: 14, text: "Vejo beleza nas pequenas coisas do meu dia a dia.", theme: "Apreciação" },
+    { day: 15, text: "Metade do caminho! Celebro minha constância e evolução.", theme: "Celebração" },
+    { day: 16, text: "Eu não sou meus pensamentos negativos. Eu sou quem os observa e os deixa ir.", theme: "Consciência" },
+    { day: 17, text: "Hoje serei gentil comigo mesmo se as coisas não saírem perfeitas.", theme: "Autocompaixão" },
+    { day: 18, text: "Agradeço pelas pessoas difíceis; elas me ensinam paciência.", theme: "Resiliência" },
+    { day: 19, text: "Confio que tudo está acontecendo para o meu bem maior.", theme: "Confiança" },
+    { day: 20, text: "Meu sorriso é uma ferramenta poderosa para mudar o ambiente ao meu redor.", theme: "Influência" },
+    { day: 21, text: "Abandono o hábito de julgar. Escolho compreender.", theme: "Empatia" },
+    { day: 22, text: "Sou grato pelo meu corpo e por tudo que ele me permite fazer.", theme: "Saúde" },
+    { day: 23, text: "O sucesso dos outros me inspira e me mostra o que é possível.", theme: "Inspiração" },
+    { day: 24, text: "Hoje, farei algo bom por alguém sem esperar nada em troca.", theme: "Generosidade" },
+    { day: 25, text: "Estou me tornando uma versão mais leve e positiva de mim mesmo.", theme: "Evolução" },
+    { day: 26, text: "Recuso-me a participar de fofocas ou conversas negativas.", theme: "Integridade" },
+    { day: 27, text: "A abundância flui para mim quando aprecio o que já está aqui.", theme: "Prosperidade" },
+    { day: 28, text: "Encaro o desconhecido com curiosidade, não com medo.", theme: "Coragem" },
+    { day: 29, text: "Tenho orgulho de ter chegado até aqui sem desistir.", theme: "Orgulho" },
+    { day: 30, text: "Sou uma fonte de positividade. Minha vida mudou para melhor.", theme: "Transformação" },
+  ];
+
+  useEffect(() => {
+    // Check localStorage for start date
+    const storedStart = localStorage.getItem('affirmationChallengeStart_v1');
+    
+    if (storedStart) {
+      setStartDate(new Date(storedStart));
+      calculateCurrentDay(new Date(storedStart));
+    } else {
+      // If no start date, we don't start automatically. User must click "Start Challenge"
+    }
+  }, []);
+
+  const startChallenge = () => {
+    const now = new Date();
+    localStorage.setItem('affirmationChallengeStart_v1', now.toISOString());
+    setStartDate(now);
+    setCurrentDayIndex(0); // Day 1 corresponds to index 0
+  };
+
+  const resetChallenge = () => {
+    if (confirm("Tem certeza que deseja reiniciar o desafio? Todo o progresso será perdido.")) {
+      localStorage.removeItem('affirmationChallengeStart_v1');
+      setStartDate(null);
+      setCurrentDayIndex(0);
+      setModalOpen(false);
+    }
+  };
+
+  const calculateCurrentDay = (start) => {
+    const now = new Date();
+    // Calculate difference in time
+    const diffTime = Math.abs(now - start);
+    // Calculate difference in days (ceiling ensures partial days count as the current day)
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); 
+    setCurrentDayIndex(diffDays);
+  };
+
+  const handleCardClick = (dayIndex) => {
+    // MODIFIED: Restrição de dia removida. Todos os cards são clicáveis.
+    setSelectedDay(affirmations[dayIndex]);
+    setModalOpen(true);
+    setAnimate(true);
+    setTimeout(() => setAnimate(false), 500);
+  };
+
+  const getDayStatus = (index) => {
+    if (!startDate) return 'available'; // Se não começou, mostra disponível para exploração
+    if (index < currentDayIndex) return 'completed';
+    if (index === currentDayIndex) return 'active';
+    return 'available'; // Substitui 'locked' por 'available'
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 font-sans text-slate-800 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header Section */}
+        <header className="text-center mb-10">
+          <div className="inline-block p-3 rounded-full bg-white shadow-md mb-4 animate-bounce-slow">
+            <Sun className="w-8 h-8 text-yellow-500" />
+          </div>
+          <h1 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-600 mb-2">
+            30 Dias de Positividade
+          </h1>
+          <p className="text-slate-500 text-lg">
+            Repgrame sua mente. Elimine reclamações.
+          </p>
+
+          {!startDate && (
+            <button 
+              onClick={startChallenge}
+              className="mt-6 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-semibold shadow-lg transform transition hover:scale-105 active:scale-95"
+            >
+              Iniciar Minha Jornada Agora
+            </button>
+          )}
+
+          {startDate && (
+            <div className="mt-4 flex justify-center items-center space-x-2 text-sm text-slate-400">
+              <span>Dia {Math.min(currentDayIndex + 1, 30)} de 30 (Referência)</span>
+              <span>•</span>
+              <button onClick={resetChallenge} className="hover:text-red-500 underline flex items-center">
+                <RefreshCw className="w-3 h-3 mr-1" /> Reiniciar
+              </button>
+            </div>
+          )}
+        </header>
+
+        {/* Grid Section */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+          {affirmations.map((item, index) => {
+            const status = getDayStatus(index);
+            
+            let cardClasses = "relative aspect-square rounded-2xl flex flex-col items-center justify-center p-2 transition-all duration-300 border-2 ";
+            let icon = null;
+
+            if (status === 'locked') {
+              // Mantido apenas para referência, caso lógica mude no futuro
+              cardClasses += "bg-slate-100 border-slate-200 text-slate-300 cursor-not-allowed";
+              icon = <Lock className="w-6 h-6 mb-1 opacity-50" />;
+            } else if (status === 'completed') {
+              cardClasses += "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 cursor-pointer shadow-sm";
+              icon = <Check className="w-6 h-6 mb-1" />;
+            } else if (status === 'active') {
+              cardClasses += "bg-white border-indigo-400 text-indigo-600 shadow-xl ring-4 ring-indigo-100 transform hover:-translate-y-1 cursor-pointer";
+              icon = <Zap className="w-6 h-6 mb-1 text-yellow-500 fill-current animate-pulse" />;
+            } else if (status === 'available') {
+              // Novo estilo para dias futuros/disponíveis
+              cardClasses += "bg-white/50 border-indigo-100 text-indigo-400 hover:bg-white hover:border-indigo-300 hover:text-indigo-600 cursor-pointer shadow-sm";
+              icon = <Sparkles className="w-6 h-6 mb-1 opacity-60" />;
+            }
+
+            return (
+              <div 
+                key={item.day} 
+                onClick={() => handleCardClick(index)}
+                className={cardClasses}
+              >
+                {status === 'active' && (
+                  <span className="absolute -top-2 -right-2 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-indigo-500"></span>
+                  </span>
+                )}
+                
+                {icon}
+                <span className="text-lg font-bold font-mono">{item.day}</span>
+                <span className="text-[10px] uppercase tracking-wider mt-1 opacity-80 text-center hidden sm:block">
+                  {status === 'locked' ? 'Bloqueado' : (status === 'active' ? 'Hoje' : (status === 'available' ? 'Ver' : 'Concluído'))}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Modal Overlay */}
+        {modalOpen && selectedDay && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setModalOpen(false)}>
+            <div 
+              className={`bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all duration-500 ${animate ? 'scale-95 opacity-90' : 'scale-100 opacity-100'}`}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-md">
+                    <span className="text-xl font-bold">Dia {selectedDay.day}</span>
+                  </div>
+                  <span className="text-white/90 font-medium tracking-wide uppercase text-sm">
+                    {selectedDay.theme}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setModalOpen(false)}
+                  className="p-1 hover:bg-white/20 rounded-full transition"
+                >
+                  <span className="text-2xl leading-none">&times;</span>
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-10 text-center flex flex-col items-center">
+                <div className="mb-6 p-4 bg-indigo-50 rounded-full text-indigo-500">
+                  {selectedDay.day % 2 === 0 ? <Heart size={40} className="fill-current" /> : <Award size={40} />}
+                </div>
+                
+                <h2 className="text-2xl md:text-3xl font-serif font-medium text-slate-800 leading-relaxed mb-8">
+                  "{selectedDay.text}"
+                </h2>
+
+                <div className="w-16 h-1 bg-gradient-to-r from-indigo-300 to-purple-300 rounded-full mb-6"></div>
+
+                <p className="text-slate-500 text-sm">
+                  Repita esta frase mentalmente sempre que sentir vontade de reclamar hoje.
+                </p>
+
+                <button 
+                  onClick={() => setModalOpen(false)}
+                  className="mt-8 px-6 py-2 border border-slate-200 hover:border-indigo-500 hover:text-indigo-600 rounded-full text-slate-500 transition-colors"
+                >
+                  Recebido com gratidão
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+      
+      <style jsx global>{`
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(-5%); }
+          50% { transform: translateY(5%); }
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 3s infinite ease-in-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default AffirmationApp;
